@@ -18,9 +18,10 @@ from boto3.dynamodb.transform import TransformationInjector
 
 print(os.environ['TABLE_NAME'])
 table_name = os.environ['TABLE_NAME']
+bucket_name = os.environ['BUCKET_NAME']
 
 s3 = boto3.client('s3')
-client = boto3.client('dynamodb')
+client = boto3.client('dynamodb', region_name='us-east-1')
 paginator = client.get_paginator('scan')
 service_model = client._service_model.operation_model('Scan')
 trans = TransformationInjector(deserializer = TypeDeserializer())
@@ -42,6 +43,9 @@ for page in paginator.paginate(**operation_parameters):
         original_last_evaluated_key =  copy.copy(page['LastEvaluatedKey'])
 
     print(original_last_evaluated_key)
+    # transformar
+    trans.inject_attribute_value_output(page, service_model)
+
     if original_last_evaluated_key:
         page['LastEvaluatedKey'] = original_last_evaluated_key # reset al original
 
@@ -53,7 +57,9 @@ for page in paginator.paginate(**operation_parameters):
 
     # La columna data es un diccionario. La transformamos en otra tabla.
     # Queremos mantener el id de la canción para poder hacer joins posteriormente.
-    song_data = pd.json_normalize(songs['data']).join(songs['track_id']) 
+    song_data = pd.json_normalize(songs['data']).join(songs['song_uuid']) 
+    # drop columna que fue pasada a otra tabla
+    songs.drop(columns = ['data'], inplace = True)
 
     # Guardar como csv
     song_file = f'songs.csv'
@@ -61,16 +67,14 @@ for page in paginator.paginate(**operation_parameters):
     songs.to_csv(song_file, index = False)
     song_data.to_csv(song_data_file, index = False)
 
-    # Guardar el csv en un bucket S3
-    bucketname = 'my-test-bucket-acc'
-    
+    # Guardar el csv en un bucket S3    
     # Songs en un folder
     s3_songs_path = f'songs/songs{i}.csv'
-    s3.upload_file(song_file, bucketname, s3_songs_path)
+    s3.upload_file(song_file, bucket_name, s3_songs_path)
 
     # Song_data en otro folder
     s3_song_data_path = f'song_data/song_data{i}.csv'
-    s3.upload_file(song_data_file, bucketname, s3_song_data_path)
+    s3.upload_file(song_data_file, bucket_name, s3_song_data_path)
 
     i += 1
     print("Processed page No ", i)

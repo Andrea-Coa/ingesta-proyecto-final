@@ -1,3 +1,3 @@
 docker build -t ingesta-songs .
-docker run --rm --name ingesta-songs-c -v $HOME/.aws/credentials:/root/.aws/credentials:ro ingesta-songs
-# agregar variable TABLE_NAME
+docker run --rm --name ingesta-songs-c -v $HOME/.aws/credentials:/root/.aws/credentials:ro -e TABLE_NAME='dev-t_songs' ingesta-songs
+# se necesitan env variables TABLE_NAME, BUCKET_NAME

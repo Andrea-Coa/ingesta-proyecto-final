@@ -19,7 +19,7 @@ Resources:
         - Key: "Name"
           Value: !Ref InstanceName
       ImageId: !Ref AMI
-      InstanceType: "t2.micro"
+      InstanceType: "t2.medium"
       KeyName: "vockey"
       SecurityGroupIds:
         - !Ref InstanceSecurityGroup

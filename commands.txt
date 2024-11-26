@@ -1,3 +1,6 @@
 docker build -t ingesta-songs .
 docker run --rm --name ingesta-songs-c -v $HOME/.aws/credentials:/root/.aws/credentials:ro -e TABLE_NAME='dev-t_songs' ingesta-songs
 # se necesitan env variables TABLE_NAME, BUCKET_NAME
+
+docker build -t ingesta-favorites .
+docker run --rm --name ingesta-favorites-c -v $HOME/.aws/credentials:/root/.aws/credentials:ro -e TABLE_NAME='dev-t_favorites' -e BUCKET_NAME='my-test-bucket-acc' ingesta-favorites

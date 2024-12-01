@@ -84,6 +84,8 @@ for page in paginator.paginate(**operation_parameters):
 
     # Tabla
     albums = pd.DataFrame.from_records(items)
+    albums['date'] = albums['date#genre'].str.split('#').str[0]
+    albums.drop(columns=['date#genre'], inplace=True)
 
     # Guardar como json
     albums_file = f'albums.json'

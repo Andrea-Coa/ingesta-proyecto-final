@@ -93,8 +93,8 @@ for page in paginator.paginate(**operation_parameters):
 
     # Tabla principal
     songs = pd.DataFrame.from_records(items)
-    songs['release_date'] = songs['genre#release-date'].str.split('#').str[1]
-    songs.drop(columns=['genre#release-date'], inplace=True)
+    songs['release_date'] = songs['genre#release_date'].str.split('#').str[1]
+    songs.drop(columns=['genre#release_date'], inplace=True)
     # songs = songs.map(normalize_strings) # quotear todo
 
     # La columna data es un diccionario. La transformamos en otra tabla.

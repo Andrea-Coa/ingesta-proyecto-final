@@ -18,7 +18,7 @@ from boto3.dynamodb.types import TypeDeserializer
 from boto3.dynamodb.transform import TransformationInjector
 
 # logging configuration
-logs_file = "logs_output/ingesta_songs.log"
+logs_file = "logs_output/ingesta_albums.log"
 logger.remove(0)
 logger.add(logs_file, format='{time:MMMM D, YYYY > HH:mm:ss} | {level} | {message} | ingesta-songs-c')
 def exit_program(early_exit=False):

@@ -1,0 +1,47 @@
+services:
+
+  ingesta-albums:
+    build: ./ingesta_albums
+    environment:
+      - TABLE_NAME=${STAGE}-${ALBUMS_TABLE} 
+      - BUCKET_NAME=${STAGE}-${BUCKET_NAME}
+    volumes:
+      - $HOME/.aws/credentials:/root/.aws/credentials:ro
+      - $HOME/logs_output:/root/programas/ingesta/logs_output
+
+
+  ingesta-artists:
+    build: ./ingesta_artists
+    environment:
+      - TABLE_NAME=${STAGE}-${ARTISTS_TABLE} 
+      - BUCKET_NAME=${STAGE}-${BUCKET_NAME}
+    volumes:
+      - $HOME/.aws/credentials:/root/.aws/credentials:ro
+      - $HOME/logs_output:/root/programas/ingesta/logs_output
+
+  ingesta-favorites:
+    build: ./ingesta_favorites
+    environment:
+      - TABLE_NAME=${STAGE}-${FAVORITES_TABLE} 
+      - BUCKET_NAME=${STAGE}-${BUCKET_NAME}
+    volumes:
+      - $HOME/.aws/credentials:/root/.aws/credentials:ro
+      - $HOME/logs_output:/root/programas/ingesta/logs_output
+
+  ingesta-songs:
+    build: ./ingesta_songs
+    environment:
+      - TABLE_NAME=${STAGE}-${SONGS_TABLE} 
+      - BUCKET_NAME=${STAGE}-${BUCKET_NAME}
+    volumes:
+      - $HOME/.aws/credentials:/root/.aws/credentials:ro
+      - $HOME/logs_output:/root/programas/ingesta/logs_output
+
+  ingesta-users:
+    build: ./ingesta_users
+    environment:
+      - TABLE_NAME=${STAGE}-${USERS_TABLE} 
+      - BUCKET_NAME=${STAGE}-${BUCKET_NAME}
+    volumes:
+      - $HOME/.aws/credentials:/root/.aws/credentials:ro
+      - $HOME/logs_output:/root/programas/ingesta/logs_output

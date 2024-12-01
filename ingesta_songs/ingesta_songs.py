@@ -5,7 +5,7 @@
 #   - Por cada página:
 #       - guardar datos como pandas DataFrame
 #       - json normalize si hay JSON anidados
-#       - guardar DataFrames resultantes como csv
+#       - guardar DataFrames resultantes como json
 #       - subir a bucket s3.
 
 import copy
@@ -22,7 +22,7 @@ from boto3.dynamodb.transform import TransformationInjector
 # logging configuration
 logs_file = "logs_output/ingesta_songs.log"
 logger.remove(0)
-logger.add(logs_file, format='{time:MMMM D, YYYY > HH:mm:ss} | {level} | {message} | ingesta-songs-c')
+logger.add(sys.stderr, format='{time:MMMM D, YYYY > HH:mm:ss} | {level} | {message} | ingesta-songs-c')
 def exit_program(early_exit=False):
     if early_exit:
         logger.warning('Saliendo del programa antes de la ejecución debido a un error previo.')
@@ -72,7 +72,7 @@ operation_parameters = { # datos a ingerir
 }
 i = 0   # inicializar contador
 
-
+# iterar por cada página
 for page in paginator.paginate(**operation_parameters):
     
     # TransformationInjector modificará todo page, incluyendo LastEvaluatedKey, así 
@@ -93,8 +93,9 @@ for page in paginator.paginate(**operation_parameters):
 
     # Tabla principal
     songs = pd.DataFrame.from_records(items)
-    songs['release_date'] = songs['genre#release_date'].str.split('#')[1]
-    songs.drop(columns=['genre#release_date'], inplace=True)
+    songs['release_date'] = songs['genre#release-date'].str.split('#').str[1]
+    songs.drop(columns=['genre#release-date'], inplace=True)
+    # songs = songs.map(normalize_strings) # quotear todo
 
     # La columna data es un diccionario. La transformamos en otra tabla.
     # Queremos mantener el id de la canción para poder hacer joins posteriormente.
@@ -102,22 +103,22 @@ for page in paginator.paginate(**operation_parameters):
     # drop columna que fue pasada a otra tabla
     songs.drop(columns = ['data'], inplace = True)
 
-    # Guardar como csv
-    song_file = f'songs.csv'
-    song_data_file = f'song_data.csv'
-    songs.to_csv(song_file, index = False)
-    song_data.to_csv(song_data_file, index = False)
+    # Guardar como json
+    song_file = f'songs.json'
+    song_data_file = f'song_data.json'
+    songs.to_json(song_file, orient='records', lines=True)
+    song_data.to_json(song_data_file,  orient='records', lines=True)
 
-    # Guardar el csv en un bucket S3    
+    # Guardar el json en un bucket S3    
     # Songs en un folder
-    s3_songs_path = f'songs/songs{i}.csv'
+    s3_songs_path = f'songs/songs{i}.json'
     try:
         s3.upload_file(song_file, bucket_name, s3_songs_path)
     except Exception as e:
         logger.error(f'No se pudo subir la página {i} a un bucket de S3. Excepción: {str(e)}')
 
     # Song_data en otro folder
-    s3_song_data_path = f'song_data/song_data{i}.csv'
+    s3_song_data_path = f'song_data/song_data{i}.json'
     try:
         s3.upload_file(song_data_file, bucket_name, s3_song_data_path)
     except Exception as e:

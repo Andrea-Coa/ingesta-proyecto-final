@@ -4,22 +4,59 @@
 #   - Scan toda la tabla por páginas
 #   - Por cada página:
 #       - guardar datos como pandas DataFrame
-#       - guardar DataFrames resultantes como csv
+#       - guardar DataFrames resultantes como json
 #       - subir a bucket s3.
 
 import copy
 import pandas as pd
 import boto3
 import os
+import sys
+from loguru import logger
 # from botocore.exceptions import ClientError
 from boto3.dynamodb.types import TypeDeserializer
 from boto3.dynamodb.transform import TransformationInjector
 
-table_name = os.environ['TABLE_NAME']
-bucket_name = os.environ['BUCKET_NAME']
+# logging configuration
+logs_file = "logs_output/ingesta_songs.log"
+logger.remove(0)
+logger.add(sys.stderr, format='{time:MMMM D, YYYY > HH:mm:ss} | {level} | {message} | ingesta-songs-c')
+def exit_program(early_exit=False):
+    if early_exit:
+        logger.warning('Saliendo del programa antes de la ejecución debido a un error previo.')
+        sys.exit(1)
+    else:
+        logger.info('Programa terminado exitosamente.')
 
-s3 = boto3.client('s3')
-client = boto3.client('dynamodb', region_name='us-east-1')
+
+# aws resource names
+table_name = os.environ.get('TABLE_NAME')
+bucket_name = os.environ.get('BUCKET_NAME')
+
+if not table_name:
+    logger.critical('No se encontró el nombre de la tabla.')
+    exit_program(True)
+if not bucket_name:
+    logger.critical('No se encontró el nombre del bucket de S3.')
+    exit_program(True)
+
+
+# conectarse a  s3 y dynamodb
+try:
+    s3 = boto3.client('s3')
+    logger.info('Conexión a S3 exitosa.')
+except Exception as e:
+    logger.critical(f'No fue posible conectarse a S3. Excepción: {e}')
+    exit_program(True)
+    
+try:
+    client = boto3.client('dynamodb', region_name='us-east-1')
+    logger.info('Conexión a DynamoDB exitosa')
+except Exception as e:
+    logger.critical(f'No fue posible conectarse a DynamoDB. Excepción: {e}')
+    exit_program(True)
+
+# tools
 paginator = client.get_paginator('scan')
 service_model = client._service_model.operation_model('Scan')
 trans = TransformationInjector(deserializer = TypeDeserializer())
@@ -50,14 +87,19 @@ for page in paginator.paginate(**operation_parameters):
     # Datos como df
     users = pd.DataFrame.from_records(items)
 
-    # Guardar como csv
-    users_file = 'users.csv'
-    users.to_csv(users_file, index = False)
+    # Guardar como json
+    users_file = 'users.json'
+    users.to_json(users_file, orient='records', lines=True)
 
-    # Guardar el csv en bucket S3
-    s3_users_path = f'users/users{i}.csv'
-    s3.upload_file(users_file, bucket_name, s3_users_path)
+    # Guardar el json en bucket S3
+    s3_users_path = f'users/users{i}.json'
+    try:
+        s3.upload_file(users_file, bucket_name, s3_users_path)
+    except Exception as e:
+        logger.error(f'No se pudo subir la página {i} a un bucket de S3. Excepción: {str(e)}')
+
 
     i += 1
     print("Processed page No ", i)
-print("Finished")
+logger.info(f'Se procesaron {i} páginas.')
+exit_program(False)

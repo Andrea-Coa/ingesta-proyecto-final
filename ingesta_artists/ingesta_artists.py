@@ -20,7 +20,7 @@ from boto3.dynamodb.transform import TransformationInjector
 # logging configuration
 logs_file = "logs_output/ingesta_songs.log"
 logger.remove(0)
-logger.add(sys.stderr, format='{time:MMMM D, YYYY > HH:mm:ss} | {level} | {message} | ingesta-songs-c')
+logger.add(logs_file, format='{time:MMMM D, YYYY > HH:mm:ss} | {level} | {message} | ingesta-songs-c')
 def exit_program(early_exit=False):
     if early_exit:
         logger.warning('Saliendo del programa antes de la ejecución debido a un error previo.')
@@ -85,6 +85,7 @@ for page in paginator.paginate(**operation_parameters):
 
     # Tabla
     artists = pd.DataFrame.from_records(items)
+    artists.drop(columns=['password'], inplace=True)
 
     # Guardar como json
     artists_file = f'artists.json'

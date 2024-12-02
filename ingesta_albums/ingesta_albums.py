@@ -19,14 +19,25 @@ from boto3.dynamodb.transform import TransformationInjector
 
 # logging configuration
 logs_file = "logs_output/ingesta_albums.log"
-logger.remove(0)
-logger.add(logs_file, format='{time:MMMM D, YYYY > HH:mm:ss} | {level} | {message} | ingesta-songs-c')
+id = 'ingesta-albums'
+logger.add(logs_file)
+
+def critical( message):
+    logger.critical(f"{id} - {message}")
+def info(message):
+    logger.info(f'{id} - {message}')
+def error(message):
+    logger.error(f'{id} - {message}')
+def warning(message):
+    logger.warning(f'{id} - {message}')
+
 def exit_program(early_exit=False):
     if early_exit:
-        logger.warning('Saliendo del programa antes de la ejecución debido a un error previo.')
+        warning('Saliendo del programa antes de la ejecución debido a un error previo.')
         sys.exit(1)
     else:
-        logger.info('Programa terminado exitosamente.')
+        info('Programa terminado exitosamente.')
+
 
 
 # aws resource names
@@ -34,26 +45,26 @@ table_name = os.environ.get('TABLE_NAME')
 bucket_name = os.environ.get('BUCKET_NAME')
 
 if not table_name:
-    logger.critical('No se encontró el nombre de la tabla.')
+    critical('No se encontró el nombre de la tabla.')
     exit_program(True)
 if not bucket_name:
-    logger.critical('No se encontró el nombre del bucket de S3.')
+    critical('No se encontró el nombre del bucket de S3.')
     exit_program(True)
 
 
 # conectarse a  s3 y dynamodb
 try:
     s3 = boto3.client('s3')
-    logger.info('Conexión a S3 exitosa.')
+    info('Conexión a S3 exitosa.')
 except Exception as e:
-    logger.critical(f'No fue posible conectarse a S3. Excepción: {e}')
+    critical(f'No fue posible conectarse a S3. Excepción: {e}')
     exit_program(True)
     
 try:
     client = boto3.client('dynamodb', region_name='us-east-1')
-    logger.info('Conexión a DynamoDB exitosa')
+    info('Conexión a DynamoDB exitosa')
 except Exception as e:
-    logger.critical(f'No fue posible conectarse a DynamoDB. Excepción: {e}')
+    critical(f'No fue posible conectarse a DynamoDB. Excepción: {e}')
     exit_program(True)
 
 
@@ -96,9 +107,9 @@ for page in paginator.paginate(**operation_parameters):
     try:
         s3.upload_file(albums_file, bucket_name, s3_albums_file)
     except Exception as e:
-        logger.error(f'No se pudo subir la página {i} a un bucket de S3. Excepción: {str(e)}')
+        error(f'No se pudo subir la página {i} a un bucket de S3. Excepción: {str(e)}')
 
     i+=1
     print("Processed page No ", i)
-logger.info(f'Se procesaron {i} páginas.')
+info(f'Se procesaron {i} páginas.')
 exit_program(False)

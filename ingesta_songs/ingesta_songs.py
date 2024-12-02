@@ -23,12 +23,20 @@ from boto3.dynamodb.transform import TransformationInjector
 logs_file = "logs_output/ingesta_songs.log"
 id = 'ingesta-songs'
 logger.add(logs_file)
+def critical( message):
+    logger.critical(f"{id} - {message}")
+def info(message):
+    logger.info(f'{id} - {message}')
+def error(message):
+    logger.error(f'{id} - {message}')
+def warning(message):
+    logger.warning(f'{id} - {message}')
 def exit_program(early_exit=False):
     if early_exit:
-        logger.warning(id + ' - Saliendo del programa antes de la ejecución debido a un error previo.')
+        warning('Saliendo del programa antes de la ejecución debido a un error previo.')
         sys.exit(1)
     else:
-        logger.info(id + ' - Programa terminado exitosamente.')
+        info('Programa terminado exitosamente.')
 
 
 # aws resource names
@@ -36,26 +44,26 @@ table_name = os.environ.get('TABLE_NAME')
 bucket_name = os.environ.get('BUCKET_NAME')
 
 if not table_name:
-    logger.critical(id + ' No se encontró el nombre de la tabla.')
+    critical('No se encontró el nombre de la tabla.')
     exit_program(True)
 if not bucket_name:
-    logger.critical(id + ' No se encontró el nombre del bucket de S3.')
+    critical('No se encontró el nombre del bucket de S3.')
     exit_program(True)
 
 
 # conectarse a  s3 y dynamodb
 try:
     s3 = boto3.client('s3')
-    logger.info(id + ' Conexión a S3 exitosa.')
+    info('Conexión a S3 exitosa.')
 except Exception as e:
-    logger.critical(id + f' - No fue posible conectarse a S3. Excepción: {e}')
+    critical('No fue posible conectarse a S3. Excepción: {e}')
     exit_program(True)
     
 try:
     client = boto3.client('dynamodb', region_name='us-east-1')
-    logger.info(id + ' Conexión a DynamoDB exitosa')
+    info('Conexión a DynamoDB exitosa')
 except Exception as e:
-    logger.critical(id + f' - No fue posible conectarse a DynamoDB. Excepción: {e}')
+    critical('No fue posible conectarse a DynamoDB. Excepción: {e}')
     exit_program(True)
 
 # tools
@@ -115,16 +123,16 @@ for page in paginator.paginate(**operation_parameters):
     try:
         s3.upload_file(song_file, bucket_name, s3_songs_path)
     except Exception as e:
-        logger.error(id + f'  - No se pudo subir la página {i} a un bucket de S3. Excepción: {str(e)}')
+        error(f'No se pudo subir la página {i} a un bucket de S3. Excepción: {str(e)}')
 
     # Song_data en otro folder
     s3_song_data_path = f'song_data/song_data{i}.json'
     try:
         s3.upload_file(song_data_file, bucket_name, s3_song_data_path)
     except Exception as e:
-        logger.error(id + f' - No se pudo subir la página {i} a un bucket de S3. Excepción: {str(e)}')
+        error(f'No se pudo subir la página {i} a un bucket de S3. Excepción: {str(e)}')
 
     i += 1
 
-logger.info(id + f' - Se procesaron {i} páginas.')
+info(f'Se procesaron {i} páginas.')
 exit_program(False)

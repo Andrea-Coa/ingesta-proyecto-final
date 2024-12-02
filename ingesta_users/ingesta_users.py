@@ -16,7 +16,7 @@ from loguru import logger
 # from botocore.exceptions import ClientError
 from boto3.dynamodb.types import TypeDeserializer
 from boto3.dynamodb.transform import TransformationInjector
-
+id = 'ingesta-users'
 # logging configuration
 logs_file = "logs_output/ingesta_users.log"
 def critical( message):

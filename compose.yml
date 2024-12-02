@@ -7,7 +7,7 @@ services:
       - BUCKET_NAME=${STAGE}-${BUCKET_NAME}
     volumes:
       - $HOME/.aws/credentials:/root/.aws/credentials:ro
-      - $HOME/logs_output:/programas/ingesta/logs_output
+      - $HOME/logs_output2:/programas/ingesta/logs_output
 
 
   ingesta-artists:
@@ -17,7 +17,7 @@ services:
       - BUCKET_NAME=${STAGE}-${BUCKET_NAME}
     volumes:
       - $HOME/.aws/credentials:/root/.aws/credentials:ro
-      - $HOME/logs_output:/programas/ingesta/logs_output
+      - $HOME/logs_output2:/programas/ingesta/logs_output
 
   ingesta-favorites:
     build: ./ingesta_favorites
@@ -26,7 +26,7 @@ services:
       - BUCKET_NAME=${STAGE}-${BUCKET_NAME}
     volumes:
       - $HOME/.aws/credentials:/root/.aws/credentials:ro
-      - $HOME/logs_output:/programas/ingesta/logs_output
+      - $HOME/logs_output2:/programas/ingesta/logs_output
 
   ingesta-songs:
     build: ./ingesta_songs
@@ -35,7 +35,7 @@ services:
       - BUCKET_NAME=${STAGE}-${BUCKET_NAME}
     volumes:
       - $HOME/.aws/credentials:/root/.aws/credentials:ro
-      - $HOME/logs_output:/programas/ingesta/logs_output
+      - $HOME/logs_output2:/programas/ingesta/logs_output
 
   ingesta-users:
     build: ./ingesta_users
@@ -44,4 +44,4 @@ services:
       - BUCKET_NAME=${STAGE}-${BUCKET_NAME}
     volumes:
       - $HOME/.aws/credentials:/root/.aws/credentials:ro
-      - $HOME/logs_output:/programas/ingesta/logs_output
+      - $HOME/logs_output2:/programas/ingesta/logs_output
